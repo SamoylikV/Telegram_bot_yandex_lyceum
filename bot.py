@@ -13,7 +13,7 @@ import random
 # TODO: Сделать клавиаутуру у пользователя что бы всё тоже было красиво
 # TODO: ну и коменты расписать
 
-updater = Updater("")
+updater = Updater("1798521468:AAHuTQmwNVlg1t3mO0vkX7AxFLwUhi-fmSc")
 
 user_city = ''
 
@@ -33,7 +33,8 @@ def main():
             # Функция читает ответ на первый вопрос и задаёт второй.
             1: [MessageHandler(Filters.text, get_city)],
             # Функция читает ответ на второй вопрос и завершает диалог.
-            2: [MessageHandler(Filters.text, second_start)]
+            2: [MessageHandler(Filters.command, second_start)],
+            3: [MessageHandler(Filters.text, text_commands)]
         },
 
         # Точка прерывания диалога. В данном случае — команда /stop.
@@ -54,17 +55,20 @@ def start(update, context):
 def get_city(update, context):
     global user_city
     user_city = update.message.text
-    update.message.reply_text(user_city)
+    reply_keyboard = [['/next']]
+    markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
+    update.message.reply_text('Продолжить?', reply_markup=markup)
     return 2
 
 
 def second_start(update, context):
     global user_city
     update.message.reply_text(f'Ваш город: {user_city}')
-    reply_keyboard = [['/get_weather']]
+    reply_keyboard = [['Узнать погоду']]
     markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
     update.message.reply_text('Выбирете действие',
                               reply_markup=markup)
+    return 3
 
 
 def get_weather(update, context):
@@ -101,8 +105,9 @@ def timer(update, context):
 
 def text_commands(update, context):
     string = None
-    # if update.message.text == 'Узнать погоду':
-    #     start(update, context)
+    print(update.message.text)
+    if update.message.text == 'Узнать погоду':
+        get_weather(update, context)
     # if string:
     #     update.message.reply_text(string)
 
