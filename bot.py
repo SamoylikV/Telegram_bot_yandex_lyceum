@@ -13,7 +13,7 @@ import random
 # TODO: Сделать клавиаутуру у пользователя что бы всё тоже было красиво
 # TODO: ну и коменты расписать
 
-updater = Updater("1778528857:AAEmkSwztdUwSBq-x5xsq-FIU49xlXuRreU")
+updater = Updater("1798521468:AAHuTQmwNVlg1t3mO0vkX7AxFLwUhi-fmSc")
 
 user_city = ''
 
@@ -54,22 +54,17 @@ def start(update, context):
 def get_city(update, context):
     global user_city
     user_city = update.message.text
-    return second_start(update, context)
+    update.message.reply_text(user_city)
+    return 2
 
 
 def second_start(update, context):
     global user_city
-    print(321)
-    if user_city != '':
-        update.message.reply_text(f'Ваш город: {user_city}')
-        reply_keyboard = [['/get_weather']]
-        markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
-        update.message.reply_text('Выбирете действие',
-                                  reply_markup=markup)
-    else:
-        update.message.reply_text(
-            'Введите ваш город, что бы разблокировать весь функционал бота')
-        return 1
+    update.message.reply_text(f'Ваш город: {user_city}')
+    reply_keyboard = [['/get_weather']]
+    markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
+    update.message.reply_text('Выбирете действие',
+                              reply_markup=markup)
 
 
 def get_weather(update, context):
