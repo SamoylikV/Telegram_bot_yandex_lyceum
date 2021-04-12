@@ -2,12 +2,13 @@ from telegram.ext import *
 from telegram import *
 from other_api.weather import weather
 from maps.metro import metro
+from maps.pharmacy import pharmacy
 import random
 
 # TODO: расписать файлы с нужными функциями
 # TODO: получаем город пользователя, и выдаём ему погоду ----------------------
 # TODO: показываем карту города, и просим его угадать (Можно взять из задачи)
-# TODO: найти ближайшую станцию метро, дистанция до неё
+# TODO: найти ближайшую станцию метро, дистанция до неё -----------------------
 # TODO: найти ближайшую аптеку тоже из задачи
 # TODO: попробовать что нибудь с новостями придумать https://pypi.org/project/GoogleNews/
 # TODO: сделать всё красиво по файлам
@@ -76,7 +77,8 @@ def second_start(update, context):
     global user_city
     update.message.reply_text(
         f'Ваш город: {user_city}, ваш адрес: {user_address}')
-    reply_keyboard = [['Узнать погоду'], ['Найти ближайшее метро']]
+    reply_keyboard = [['Узнать погоду'], ['Найти ближайшее метро'],
+                      ['Найти ближайшее аптеку']]
     markup = ReplyKeyboardMarkup(reply_keyboard)
     update.message.reply_text('Выбирете действие',
                               reply_markup=markup)
@@ -112,6 +114,25 @@ def get_metro(update, context):
             f'Рядом с вами нету метро, да поможет вам бог!')
 
 
+def get_pharmacy(update, context):
+    global user_city
+    global user_address
+    pharmacy_is_near = True
+    print(pharmacy(user_city, user_address))
+    try:
+        file_name = pharmacy(user_city, user_address)[0]
+        to_pharmacy_distance = pharmacy(user_city, user_address)[1]
+    except Exception as e:
+        pharmacy_is_near = False
+    if file_name != 'Рядом с вами нету аптеки' and pharmacy_is_near is True:
+        update.message.reply_photo(photo=open(f'img/{file_name}', 'rb'))
+        update.message.reply_text(
+            f'Расстояние до аптеки: {to_pharmacy_distance}м')
+    else:
+        update.message.reply_text(
+            f'Рядом с вами нету аптеки, земля вам пухом!')
+
+
 # def to_ring(context):
 #     cont = context.job.context
 #     context.bot.send_message(cont[0], text=cont[1])
@@ -143,6 +164,8 @@ def text_commands(update, context):
         get_weather(update, context)
     if update.message.text == 'Найти ближайшее метро':
         get_metro(update, context)
+    if update.message.text == 'Найти ближайшее аптеку':
+        get_pharmacy(update, context)
     # if string:
     #     update.message.reply_text(string)
 

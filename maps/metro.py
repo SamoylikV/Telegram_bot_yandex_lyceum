@@ -15,11 +15,6 @@ def metro(city, address):
                                  f"0d1649f-0493" \
                                  f"-4b70-98ba-98533de7710b&" \
                                  f"geocode={place}&format=json"
-        geocoder_request_city = f"http://geocode" \
-                                f"-maps.yandex.ru/1.x/?apikey=4" \
-                                f"0d1649f-0493" \
-                                f"-4b70-98ba-98533de7" \
-                                f"710b&geocode={city}&format=json"
         response_metro = requests.get(geocoder_request_metro)
         if response_metro:
             json_response_metro = response_metro.json()
@@ -58,18 +53,14 @@ def metro(city, address):
                     'Locality'][
                     'Thoroughfare']['Premise']['PremiseName'][6::]
 
-            toponym_coodrinates_city = toponym["Point"]["pos"]
-            toponym_coodrinates_city = toponym_coodrinates_city.split(' ')
-            toponym_coodrinates_city = ','.join(toponym_coodrinates_city)
-            toponym_coodrinates_city = ''.join(toponym_coodrinates_city)
             os.chdir(f'{os.getcwd()}\img')
 
             map_request = f"https://static-maps.yandex.ru/1" \
-                          f".x/?ll={toponym_coodrinates_city}&spn=0" \
+                          f".x/?ll={metro_coodrinates}&spn=0" \
                           f".01,0.01&l=map&pt={metro_coodrinates},comma"
 
             response_map = requests.get(map_request)
-            map_file = f"map{randint(0, 10000)}.png"
+            map_file = f"map{randint(0, 100000)}.png"
             with open(map_file, "wb") as file:
                 file.write(response_map.content)
 
