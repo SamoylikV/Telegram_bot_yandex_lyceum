@@ -1,7 +1,7 @@
 import requests
 import os
 from random import randint
-import shutil
+from maps.distance import lonlat_distance
 
 
 def metro(city, address):
@@ -10,12 +10,16 @@ def metro(city, address):
     full_adress = f'{city} {address}'
     place = '%20'.join(full_adress.split(' '))
     try:
-        geocoder_request_metro = f"http://geocode-maps.yandex.ru/1.x/?apikey=4" \
+        geocoder_request_metro = f"http://geocode-m" \
+                                 f"aps.yandex.ru/1.x/?apikey=4" \
                                  f"0d1649f-0493" \
-                                 f"-4b70-98ba-98533de7710b&geocode={place}&format=json"
-        geocoder_request_city = f"http://geocode-maps.yandex.ru/1.x/?apikey=4" \
+                                 f"-4b70-98ba-98533de7710b&" \
+                                 f"geocode={place}&format=json"
+        geocoder_request_city = f"http://geocode" \
+                                f"-maps.yandex.ru/1.x/?apikey=4" \
                                 f"0d1649f-0493" \
-                                f"-4b70-98ba-98533de7710b&geocode={city}&format=json"
+                                f"-4b70-98ba-98533de7" \
+                                f"710b&geocode={city}&format=json"
         response_metro = requests.get(geocoder_request_metro)
         if response_metro:
             json_response_metro = response_metro.json()
@@ -35,9 +39,14 @@ def metro(city, address):
                                      f'{toponym_coodrinates_metro}&kind=met' \
                                      f'ro&results' \
                                      f'=1&format=json'
-            print()
             response_metro = requests.get(geocoder_request_metro)
             json_response_metro = response_metro.json()
+            metro_cords = json_response_metro["response"]["GeoObjectC" \
+                                                          "ollection"][
+                "featureMember"][0]["GeoObject"]["Point"]["pos"]
+            metro_coodrinates = metro_cords.split(' ')
+            metro_coodrinates = ','.join(metro_coodrinates)
+            metro_coodrinates = ''.join(metro_coodrinates)
 
             toponym_metro = \
                 json_response_metro["response"]["GeoObjectCollection"][
@@ -57,17 +66,24 @@ def metro(city, address):
 
             map_request = f"https://static-maps.yandex.ru/1" \
                           f".x/?ll={toponym_coodrinates_city}&spn=0" \
-                          f".1,0.1&l=map&pt={toponym_coodrinates_metro},comma"
-            response_map = requests.get(map_request)
-            map_file = f"metro_map{randint(0, 10000)}.png"
+                          f".01,0.01&l=map&pt={metro_coodrinates},comma"
 
+            response_map = requests.get(map_request)
+            map_file = f"map{randint(0, 10000)}.png"
             with open(map_file, "wb") as file:
                 file.write(response_map.content)
+
             os.chdir(orig_path)
-            return [toponym_metro_tochno, map_file]
+            return [toponym_metro_tochno, map_file,
+                    lonlat_distance((toponym_coodrinates_metro.split(',')[0],
+                                     toponym_coodrinates_metro.split(',')[1]),
+                                    (metro_cords.split(' ')[0],
+                                     metro_cords.split(' ')[1]))]
         else:
+
             os.chdir(orig_path)
             return [toponym_metro_tochno]
-    except Exception:
+    except Exception as e:
+        print(e)
         os.chdir(orig_path)
         return [toponym_metro_tochno]

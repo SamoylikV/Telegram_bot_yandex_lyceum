@@ -95,15 +95,18 @@ def get_metro(update, context):
     global user_address
     metro_is_near = True
     metro_name = metro(user_city, user_address)[0]
-    chat_id = update.message.chat.id,
+    print(metro(user_city, user_address))
     try:
         file_name = metro(user_city, user_address)[1]
-    except Exception:
+        to_metro_distance = metro(user_city, user_address)[2]
+    except Exception as e:
         metro_is_near = False
     if metro_name != 'Рядом с вами нету метро' and metro_is_near is True:
         update.message.reply_photo(photo=open(f'img/{file_name}', 'rb'))
         update.message.reply_text(
             f'Ближайшая к вам станция метро: {metro_name}')
+        update.message.reply_text(
+            f'Расстояние до станции: {to_metro_distance}м')
     else:
         update.message.reply_text(
             f'Рядом с вами нету метро, да поможет вам бог!')
