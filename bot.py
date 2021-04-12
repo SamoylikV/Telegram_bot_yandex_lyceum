@@ -1,21 +1,23 @@
 from telegram.ext import *
 from telegram import *
-from maps.geocoder_requests import weather
+from other_api.weather import weather
+from maps.metro import metro
 import random
 
 # TODO: расписать файлы с нужными функциями
-# TODO: получаем город пользователя, и выдаём ему погоду
+# TODO: получаем город пользователя, и выдаём ему погоду ----------------------
 # TODO: показываем карту города, и просим его угадать (Можно взять из задачи)
-# TODO: найти ближайшую станцию метро
+# TODO: найти ближайшую станцию метро, дистанция до неё
 # TODO: найти ближайшую аптеку тоже из задачи
 # TODO: попробовать что нибудь с новостями придумать https://pypi.org/project/GoogleNews/
 # TODO: сделать всё красиво по файлам
 # TODO: Сделать клавиаутуру у пользователя что бы всё тоже было красиво
 # TODO: ну и коменты расписать
 
-updater = Updater("")
+updater = Updater("1798521468:AAHuTQmwNVlg1t3mO0vkX7AxFLwUhi-fmSc")
 
 user_city = ''
+user_address = ''
 
 
 def main():
@@ -33,8 +35,9 @@ def main():
             # Функция читает ответ на первый вопрос и задаёт второй.
             1: [MessageHandler(Filters.text, get_city)],
             # Функция читает ответ на второй вопрос и завершает диалог.
-            2: [MessageHandler(Filters.command, second_start)],
-            3: [MessageHandler(Filters.text, text_commands)]
+            2: [MessageHandler(Filters.text, get_address)],
+            3: [MessageHandler(Filters.text, second_start)],
+            4: [MessageHandler(Filters.text, text_commands)]
         },
 
         # Точка прерывания диалога. В данном случае — команда /stop.
@@ -48,35 +51,62 @@ def main():
 def start(update, context):
     global user_city
     update.message.reply_text(
-        'Введите ваш город, что бы разблокировать весь функционал бота')
+        'Введите ваш город и адрес, что бы разблокировать весь функционал бота')
+    update.message.reply_text('Введите город')
     return 1
 
 
 def get_city(update, context):
     global user_city
     user_city = update.message.text
+    update.message.reply_text('Введите адрес')
+    return 2
+
+
+def get_address(update, context):
+    global user_address
+    user_address = update.message.text
     reply_keyboard = [['/next']]
     markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
     update.message.reply_text('Продолжить?', reply_markup=markup)
-    return 2
+    return 3
 
 
 def second_start(update, context):
     global user_city
-    update.message.reply_text(f'Ваш город: {user_city}')
-    reply_keyboard = [['Узнать погоду']]
-    markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
+    update.message.reply_text(
+        f'Ваш город: {user_city}, ваш адрес: {user_address}')
+    reply_keyboard = [['Узнать погоду'], ['Найти ближайшее метро']]
+    markup = ReplyKeyboardMarkup(reply_keyboard)
     update.message.reply_text('Выбирете действие',
                               reply_markup=markup)
-    return 3
+    return 4
 
 
 def get_weather(update, context):
     global user_city
-    # update.message.reply_text('Напишите свой город')
     update.message.reply_text(
-        f'В городе {user_city} {weather(user_city)["conditions"]}\n'
-        f'Температура: {weather(user_city)["temp"]}C')
+        f'В городе {user_city} {weather(user_city)["conditions"]}')
+    update.message.reply_text(f'Температура: {weather(user_city)["temp"]}C')
+
+
+def get_metro(update, context):
+    global user_city
+    global user_address
+    metro_is_near = True
+    metro_name = metro(user_city, user_address)[0]
+    chat_id = update.message.chat.id,
+    try:
+        file_name = metro(user_city, user_address)[1]
+    except Exception:
+        metro_is_near = False
+    if metro_name != 'Рядом с вами нету метро' and metro_is_near is True:
+        update.message.reply_photo(photo=open(f'img/{file_name}', 'rb'))
+        update.message.reply_text(
+            f'Ближайшая к вам станция метро: {metro_name}')
+    else:
+        update.message.reply_text(
+            f'Рядом с вами нету метро, да поможет вам бог!')
 
 
 # def to_ring(context):
@@ -108,6 +138,8 @@ def text_commands(update, context):
     print(update.message.text)
     if update.message.text == 'Узнать погоду':
         get_weather(update, context)
+    if update.message.text == 'Найти ближайшее метро':
+        get_metro(update, context)
     # if string:
     #     update.message.reply_text(string)
 
