@@ -9,10 +9,10 @@ import random
 # TODO: получаем город пользователя, и выдаём ему погоду ----------------------
 # TODO: показываем карту города, и просим его угадать (Можно взять из задачи)
 # TODO: найти ближайшую станцию метро, дистанция до неё -----------------------
-# TODO: найти ближайшую аптеку тоже из задачи
+# TODO: найти ближайшую аптеку тоже из задачи ---------------------------------
 # TODO: попробовать что нибудь с новостями придумать https://pypi.org/project/GoogleNews/
 # TODO: сделать всё красиво по файлам
-# TODO: Сделать клавиаутуру у пользователя что бы всё тоже было красиво
+# TODO: Сделать клавиаутуру у пользователя что бы всё тоже было красиво--------
 # TODO: ну и коменты расписать
 
 f = open("token.txt", encoding="utf8")
@@ -46,7 +46,6 @@ def main():
         fallbacks=[CommandHandler('stop', stop)]
     )
     dp.add_handler(conv_handler)
-    dp.add_handler(CommandHandler("get_weather", get_weather))
     # dp.add_handler(MessageHandler(Filters.text, text_commands))
 
 
@@ -54,7 +53,8 @@ def start(update, context):
     global user_city
     update.message.reply_text(
         'Введите ваш город и адрес, что бы разблокировать весь функционал бота')
-    update.message.reply_text('Введите город')
+    update.message.reply_text('Введите город',
+                              reply_markup=ReplyKeyboardRemove())
     return 1
 
 
@@ -68,29 +68,40 @@ def get_city(update, context):
 def get_address(update, context):
     global user_address
     user_address = update.message.text
-    reply_keyboard = [['/next']]
+    reply_keyboard = [['/yes', '/no']]
     markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
-    update.message.reply_text('Продолжить?', reply_markup=markup)
+    update.message.reply_text('Вы правильно всё ввели?', reply_markup=markup)
     return 3
 
 
 def second_start(update, context):
     global user_city
-    update.message.reply_text(
-        f'Ваш город: {user_city}, ваш адрес: {user_address}')
-    reply_keyboard = [['Узнать погоду'], ['Найти ближайшее метро'],
-                      ['Найти ближайшее аптеку']]
-    markup = ReplyKeyboardMarkup(reply_keyboard)
-    update.message.reply_text('Выбирете действие',
-                              reply_markup=markup)
+    update.message.reply_text(f'Ваш город: {user_city}')
+    update.message.reply_text(f'Ваш адрес: {user_address}')
+    if update.message.text == '/no':
+        update.message.reply_text('Введите город')
+        return 1
+    else:
+        reply_keyboard = [['Узнать погоду'],
+                          ['Найти ближайшее метро',
+                           'Показать аптеки вашего города'],
+                          ['Вернуться в начало', 'Ввести новый адрес']]
+        markup = ReplyKeyboardMarkup(reply_keyboard)
+        update.message.reply_text('Выбирете действие',
+                                  reply_markup=markup)
     return 4
 
 
 def get_weather(update, context):
     global user_city
-    update.message.reply_text(
-        f'В городе {user_city} {weather(user_city)["conditions"]}')
-    update.message.reply_text(f'Температура: {weather(user_city)["temp"]}C')
+    if weather(user_city)["conditions"] is not None:
+        update.message.reply_text(
+            f'В городе {user_city} {weather(user_city)["conditions"]}')
+        update.message.reply_text(
+            f'Температура: {weather(user_city)["temp"]}C')
+    else:
+        update.message.reply_text(
+            'Проверьте написание города и повторите попытку')
 
 
 def get_metro(update, context):
@@ -122,13 +133,10 @@ def get_pharmacy(update, context):
     print(pharmacy(user_city, user_address))
     try:
         file_name = pharmacy(user_city, user_address)[0]
-        to_pharmacy_distance = pharmacy(user_city, user_address)[1]
     except Exception as e:
         pharmacy_is_near = False
     if file_name != 'Рядом с вами нету аптеки' and pharmacy_is_near is True:
         update.message.reply_photo(photo=open(f'img/{file_name}', 'rb'))
-        update.message.reply_text(
-            f'Расстояние до аптеки: {to_pharmacy_distance}м')
     else:
         update.message.reply_text(
             f'Рядом с вами нету аптеки, земля вам пухом!')
@@ -159,16 +167,35 @@ def timer(update, context):
 
 
 def text_commands(update, context):
-    string = None
     print(update.message.text)
+
+    if update.message.text == '/start':
+        update.message.reply_text(
+            'Введите ваш город и адрес, что '
+            'бы разблокировать весь функционал бота')
+        update.message.reply_text('Введите город')
+        return 1
+
+    if update.message.text == 'Вернуться в начало':
+        update.message.reply_text('Введите город')
+        return 1
+
+    if update.message.text == 'Ввести новый адрес':
+        update.message.reply_text('Введите новый адрес')
+        return 2
+
     if update.message.text == 'Узнать погоду':
         get_weather(update, context)
+
     if update.message.text == 'Найти ближайшее метро':
         get_metro(update, context)
-    if update.message.text == 'Найти ближайшее аптеку':
+
+    if update.message.text == 'Показать аптеки вашего города':
         get_pharmacy(update, context)
-    # if string:
-    #     update.message.reply_text(string)
+
+
+# if string:
+#     update.message.reply_text(string)
 
 
 def stop(update, context):
