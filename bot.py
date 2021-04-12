@@ -13,7 +13,7 @@ import random
 # TODO: Сделать клавиаутуру у пользователя что бы всё тоже было красиво
 # TODO: ну и коменты расписать
 
-updater = Updater("1798521468:AAHuTQmwNVlg1t3mO0vkX7AxFLwUhi-fmSc")
+updater = Updater("")
 
 user_city = ''
 
