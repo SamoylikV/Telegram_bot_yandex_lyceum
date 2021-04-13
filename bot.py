@@ -1,13 +1,15 @@
 from telegram.ext import *
 from telegram import *
-from other_api.weather import weather
+from other.weather import weather
+from other.comments import comments
 from maps.metro import metro
 from maps.pharmacy import pharmacy
+from games.guess_the_city import guess_the_city
 import random
 
 # TODO: расписать файлы с нужными функциями
 # TODO: получаем город пользователя, и выдаём ему погоду ----------------------
-# TODO: показываем карту города, и просим его угадать (Можно взять из задачи)
+# TODO: показываем карту города, и просим его угадать--------------------------
 # TODO: найти ближайшую станцию метро, дистанция до неё -----------------------
 # TODO: найти ближайшую аптеку тоже из задачи ---------------------------------
 # TODO: попробовать что нибудь с новостями придумать https://pypi.org/project/GoogleNews/
@@ -18,8 +20,22 @@ import random
 f = open("token.txt", encoding="utf8")
 updater = Updater(f.readlines()[0])
 
+user_name = ''
 user_city = ''
 user_address = ''
+user_comment = ''
+user_answer = ''
+current_city = ''
+game_is_played = False
+is_first_message = True
+keyboard_main = [['Узнать погоду', 'Написать отзыв'],
+                 ['Найти ближайшее метро',
+                  'Показать аптеки вашего города'],
+                 ['Вернуться в начало', 'Ввести новый адрес'], ['Игры']]
+
+keyboard_games = [['Угадай город'],
+                  ['Основные функции']]
+keyboard = keyboard_main
 
 
 def main():
@@ -39,7 +55,8 @@ def main():
             # Функция читает ответ на второй вопрос и завершает диалог.
             2: [MessageHandler(Filters.text, get_address)],
             3: [MessageHandler(Filters.text, second_start)],
-            4: [MessageHandler(Filters.text, text_commands)]
+            4: [MessageHandler(Filters.text, get_comments)],
+            5: [MessageHandler(Filters.text, text_commands)]
         },
 
         # Точка прерывания диалога. В данном случае — команда /stop.
@@ -82,14 +99,10 @@ def second_start(update, context):
         update.message.reply_text('Введите город')
         return 1
     else:
-        reply_keyboard = [['Узнать погоду'],
-                          ['Найти ближайшее метро',
-                           'Показать аптеки вашего города'],
-                          ['Вернуться в начало', 'Ввести новый адрес']]
-        markup = ReplyKeyboardMarkup(reply_keyboard)
+        markup = ReplyKeyboardMarkup(keyboard)
         update.message.reply_text('Выбирете действие',
                                   reply_markup=markup)
-    return 4
+    return 5
 
 
 def get_weather(update, context):
@@ -142,33 +155,19 @@ def get_pharmacy(update, context):
             f'Рядом с вами нету аптеки, земля вам пухом!')
 
 
-# def to_ring(context):
-#     cont = context.job.context
-#     context.bot.send_message(cont[0], text=cont[1])
-
-
-# def dice(update, context):
-#     reply_keyboard = [['кинуть один шестигранный кубик',
-#                        'кинуть 2 шестигранных кубика одновременно'],
-#                       ['кинуть 20-гранный кубик', 'вернуться назад']]
-#     markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=False)
-#
-#     update.message.reply_text('Как кинуть кубик?',
-#                               reply_markup=markup)
-
-
-def timer(update, context):
-    reply_keyboard = [['30 секунд', '1 минута'],
-                      ['5 минут', 'вернуться назад']]
-    markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=False)
-
-    update.message.reply_text('Сколько засечь?',
-                              reply_markup=markup)
+def get_comments(update, context):
+    global user_comment
+    global user_name
+    user_comment = update.message.text
+    return 5
 
 
 def text_commands(update, context):
+    global user_comment
+    global keyboard
+    global current_city
+    global game_is_played
     print(update.message.text)
-
     if update.message.text == '/start':
         update.message.reply_text(
             'Введите ваш город и адрес, что '
@@ -184,6 +183,25 @@ def text_commands(update, context):
         update.message.reply_text('Введите новый адрес')
         return 2
 
+    if update.message.text == '/exit':
+        print("user_comment =", user_comment)
+        markup = ReplyKeyboardMarkup(keyboard)
+        if user_comment != '':
+            update.message.reply_text('Ваш отзыв успешно записан!',
+                                      reply_markup=markup)
+            comments(user_comment, user_name)
+            user_comment = ''
+        else:
+            update.message.reply_text('Ваш отзыв пуст',
+                                      reply_markup=markup)
+
+    if update.message.text == 'Написать отзыв':
+        reply_keyboard = [['/exit']]
+        markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
+        update.message.reply_text(
+            f'Сюда вы можете написать ваш комментарий', reply_markup=markup)
+        return 4
+
     if update.message.text == 'Узнать погоду':
         get_weather(update, context)
 
@@ -193,9 +211,45 @@ def text_commands(update, context):
     if update.message.text == 'Показать аптеки вашего города':
         get_pharmacy(update, context)
 
+    if update.message.text == 'Игры':
+        keyboard = keyboard_games
+        markup = ReplyKeyboardMarkup(keyboard)
+        update.message.reply_text(
+            f'Переключаю на клавиатуру "{update.message.text}"',
+            reply_markup=markup)
 
-# if string:
-#     update.message.reply_text(string)
+    if update.message.text == 'Основные функции':
+        keyboard = keyboard_main
+        markup = ReplyKeyboardMarkup(keyboard)
+        update.message.reply_text(
+            f'Переключаю на клавиатуру "{update.message.text}"',
+            reply_markup=markup)
+
+    if update.message.text == 'Угадай город':
+        reply_keyboard = [['/give_up']]
+        markup = ReplyKeyboardMarkup(reply_keyboard)
+        map_file, current_city = guess_the_city()
+        update.message.reply_text(
+            f'Напишите названия этого города', reply_markup=markup)
+        update.message.reply_photo(
+            photo=open(f'img/{map_file}', 'rb'))
+        game_is_played = True
+        print(current_city)
+
+    if update.message.text == '/give_up':
+        markup = ReplyKeyboardMarkup(keyboard)
+        update.message.reply_text(f'Это был город: {current_city}',
+                                  reply_markup=markup)
+        current_city = ''
+
+    if game_is_played is True:
+        if update.message.text == current_city:
+            markup = ReplyKeyboardMarkup(keyboard)
+            update.message.reply_text(
+                f'Правильно! Это был город: {current_city}',
+                reply_markup=markup)
+        else:
+            update.message.reply_text(f'Неверно или ничего не написано')
 
 
 def stop(update, context):
