@@ -1,14 +1,18 @@
 import os
 from random import choice, randint
 import requests
-from time import sleep
 
 
 def guess_the_city():
-    cities_list = ['Тюмень', 'Москва', 'Екатеринбург', 'Санкт-Петербург']
+    """
+    Игра "угадай город"
+    :return: название города
+    """
+    cities_list = ['Тюмень', 'Москва', 'Екатеринбург',
+                   'Санкт-петербург']  # Список городов в игре
     orig_path = os.getcwd()
     current_city = choice(cities_list)
-    print(current_city)
+    print(current_city)  # Правильный ответ
     try:
         geocoder_request = f"http://geocode-maps.yandex.ru/1.x/?apikey=4" \
                            f"0d1649f-0493-4b70-98ba-98533de771" \

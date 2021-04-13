@@ -1,10 +1,13 @@
 import requests
 import os
 from random import randint
-from maps.distance import lonlat_distance
 
 
 def pharmacy(city, address):
+    """
+    Нахождение аптек в городе
+    :return: Название файла с картой
+    """
     orig_path = os.getcwd()
     toponym_pharmacy_tochno = 'Рядом с вами нету аптеки'
     new_points = []

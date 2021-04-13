@@ -5,6 +5,12 @@ from maps.distance import lonlat_distance
 
 
 def metro(city, address):
+    """
+    Нахождение ближайшей станции метро
+    :param city: Город пользователя
+    :param address: Адрес пользователя
+    :return: Название станции, названия файла с картой, расстояние до станции
+    """
     orig_path = os.getcwd()
     toponym_metro_tochno = 'Рядом с вами нету метро'
     full_adress = f'{city} {address}'
@@ -60,7 +66,7 @@ def metro(city, address):
                           f".01,0.01&l=map&pt={metro_coodrinates},comma"
 
             response_map = requests.get(map_request)
-            map_file = f"map{randint(0, 100000)}.png"
+            map_file = f"metro_map{randint(0, 100000)}.png"
             with open(map_file, "wb") as file:
                 file.write(response_map.content)
 
