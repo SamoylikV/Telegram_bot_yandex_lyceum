@@ -2,6 +2,12 @@ import math
 
 
 def lonlat_distance(a, b):
+    """
+    Вспомогательная функция нахождения расстояния между двумя точками
+    :param a: Координаты точки 1
+    :param b: Координаты точки 2
+    :return: Расстояние между точками
+    """
     degree_to_meters_factor = 111 * 1000  # 111 километров в метрах
     a_lon, a_lat = float(a[0]), float(a[1])
     b_lon, b_lat = float(b[0]), float(b[1])

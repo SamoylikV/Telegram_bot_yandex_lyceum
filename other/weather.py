@@ -2,6 +2,11 @@ import requests
 
 
 def weather(city):
+    """
+    Функция получение погоды в городе пользователя
+    :param city: Город пользователя
+    :return: Температура в городе, условия в городе
+    """
     slovar = {}
     try:
         s_city = f"{city},RU"

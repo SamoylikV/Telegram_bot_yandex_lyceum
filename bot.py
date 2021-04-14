@@ -6,16 +6,7 @@ from maps.metro import metro
 from maps.pharmacy import pharmacy
 from maps.closest_mac import closest_mac
 from games.guess_the_city import guess_the_city
-
-# TODO: расписать файлы с нужными функциями------------------------------------
-# TODO: получаем город пользователя, и выдаём ему погоду ----------------------
-# TODO: показываем карту города, и просим его угадать--------------------------
-# TODO: найти ближайшую станцию метро, дистанция до неё -----------------------
-# TODO: найти ближайшую аптеку тоже из задачи ---------------------------------
-# TODO: написать юнит тесты
-# TODO: сделать всё красиво по файлам------------------------------------------
-# TODO: Сделать клавиаутуру у пользователя что бы всё тоже было красиво--------
-# TODO: ну и коменты расписать
+from games.dice import throw_a_cube, dice
 
 f = open("token.txt", encoding="utf8")
 updater = Updater(f.readlines()[0])
@@ -23,23 +14,23 @@ try:
     p = open("pass.txt", encoding="utf8")
     admin_pass = p.readlines()[0]
 except Exception:
-    admin_pass = 'Vasiliy_Samoylik_bhe_best_person_on_the_Earth'
+    admin_pass = 'Vasiliy_Samoylik_the_best_person_on_the_Earth'
 
-user_name = ''
-user_city = ''
-user_address = ''
-user_comment = ''
-user_answer = ''
-current_city = ''
-try_counter = 0
-game_is_played = False
-is_admin = True
-keyboard_main = [['Узнать погоду', 'Написать отзыв', 'Ввести новый адрес', ],
-                 ['Найти ближайшее метро', 'Найти ближайший макдональдс',
-                  'Показать центральные аптеки вашего города'],
-                 ['Игры']]
-keyboard_games = [['Угадай город'],
-                  ['Основные функции']]
+user_name = ''  # Переменная с именем пользователя
+user_city = ''  # Переменная с городом пользователя
+user_address = ''  # Переменная с адресом пользователя
+user_comment = ''  # Переменная с комментарием пользователя
+current_city = ''  # Переменная с текущим городом в игре "Угадай город"
+try_counter = 0  # Счёичмк попыток в игре "Угадай город"
+game_is_played = False  # Переменная с состаянием игры "Угадай город"
+is_admin = True  # Переменна яс состоянием меню админа
+keyboard_main = [
+    ['🌤 Узнать погоду', '🖊️ Написать отзыв', '🌆 Ввести новый адрес'],
+    ['🚇 Найти ближайшее метро', '🍟 Найти ближайший макдональдс',
+     '🏥 Показать центральные аптеки вашего города'],
+    ['🎮 Игры']]
+keyboard_games = [['🌆 Угадай город', '🎲 Кинуть кубик'],
+                  ['🕶 Основные функции']]
 keyboard_admin = [['Перезапустить бота']]
 keyboard = keyboard_main
 
@@ -47,7 +38,6 @@ keyboard = keyboard_main
 def main():
     global updater
     dp = updater.dispatcher
-    # dp.add_handler(CommandHandler("start", start))
     conv_handler = ConversationHandler(
         # Точка входа в диалог.
         # В данном случае — команда /start. Она задаёт первый вопрос.
@@ -56,20 +46,16 @@ def main():
         # Состояние внутри диалога.
         # Вариант с двумя обработчиками, фильтрующими текстовые сообщения.
         states={
-            # Функция читает ответ на первый вопрос и задаёт второй.
             1: [MessageHandler(Filters.text, get_city)],
-            # Функция читает ответ на второй вопрос и завершает диалог.
             2: [MessageHandler(Filters.text, get_address)],
             3: [MessageHandler(Filters.text, second_start)],
             4: [MessageHandler(Filters.text, get_comments)],
             5: [MessageHandler(Filters.text, text_commands)]
         },
 
-        # Точка прерывания диалога. В данном случае — команда /stop.
         fallbacks=[CommandHandler('stop', stop)]
     )
     dp.add_handler(conv_handler)
-    # dp.add_handler(MessageHandler(Filters.text, text_commands))
 
 
 def start(update, context):
@@ -78,11 +64,9 @@ def start(update, context):
     """
     global user_city
     global is_admin
-    if is_admin is True:
-        update.message.reply_text(
-            'Введите ваш город и адрес, '
-            'чтобы разблокировать весь функционал бота')
-        is_admin = False
+    update.message.reply_text(
+        'Введите ваш город и адрес, '
+        'чтобы разблокировать весь функционал бота')
     update.message.reply_text('Введите город',
                               reply_markup=ReplyKeyboardRemove())
     return 1
@@ -119,7 +103,7 @@ def second_start(update, context):
     и выводим клавиатуру с главным меню
     """
     global user_city
-    if update.message.text == '/no':
+    if update.message.text == 'Нет':
         update.message.reply_text('Введите город')
         return 1
     else:
@@ -177,7 +161,7 @@ def get_pharmacy(update, context):
     try:
         file_name = pharmacy(user_city, user_address)[0]
         update.message.reply_photo(photo=open(f'img/{file_name}', 'rb'))
-    except Exception as e:
+    except Exception:
         update.message.reply_text(
             f'Рядом с вами нету аптеки, земля вам пухом!')
 
@@ -236,12 +220,12 @@ def text_commands(update, context):
         return 1
 
     # Ввод нового адреса
-    if update.message.text == 'Ввести новый адрес':
+    if update.message.text == '🌆 Ввести новый адрес':
         update.message.reply_text('Введите город')
         return 1
 
     # Ввод отзыва
-    if update.message.text == 'Написать отзыв':
+    if update.message.text == '🖊️ Написать отзыв':
         reply_keyboard = [['Подтвердить']]
         markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
         update.message.reply_text(
@@ -262,23 +246,23 @@ def text_commands(update, context):
                                       reply_markup=markup)
 
     # Обрабтока команды вывода погоды
-    if update.message.text == 'Узнать погоду':
+    if update.message.text == '🌤 Узнать погоду':
         get_weather(update, context)
 
     # Обрабтока команды вывода метро
-    if update.message.text == 'Найти ближайшее метро':
+    if update.message.text == '🚇 Найти ближайшее метро':
         get_metro(update, context)
 
     # Обрабтока команды вывода аптек города
-    if update.message.text == 'Показать центральные аптеки вашего города':
+    if update.message.text == '🏥 Показать центральные аптеки вашего города':
         get_pharmacy(update, context)
 
     # Обрабтока команды вывода ближайшего макдональдса
-    if update.message.text == 'Найти ближайший макдональдс':
+    if update.message.text == '🍟 Найти ближайший макдональдс':
         get_closest_mac(update, context)
 
     # Обрабтока команды на смены клавиатуры на игровую
-    if update.message.text == 'Игры':
+    if update.message.text == '🎮 Игры':
         keyboard = keyboard_games
         markup = ReplyKeyboardMarkup(keyboard)
         update.message.reply_text(
@@ -286,7 +270,7 @@ def text_commands(update, context):
             reply_markup=markup)
 
     # Обрабтока команды на смены клавиатуры на основную
-    if update.message.text == 'Основные функции':
+    if update.message.text == '🕶 Основные функции':
         keyboard = keyboard_main
         markup = ReplyKeyboardMarkup(keyboard)
         update.message.reply_text(
@@ -294,7 +278,7 @@ def text_commands(update, context):
             reply_markup=markup)
 
     # Обрабтока команды на начало игры "Угадай город"
-    if update.message.text == 'Угадай город':
+    if update.message.text == '🌆 Угадай город':
         reply_keyboard = [['Сдаться']]
         markup = ReplyKeyboardMarkup(reply_keyboard)
         map_file, current_city = guess_the_city()
@@ -330,6 +314,27 @@ def text_commands(update, context):
                 f'Неверно или ничего не написано, '
                 f'осталось {11 - try_counter} попыток')
 
+    # Возвращение в меню игр
+    if update.message.text == '⏪ Вернуться назад':
+        markup = ReplyKeyboardMarkup(keyboard)
+        update.message.reply_text('Возвращаемся назад', reply_markup=markup)
+
+    # Кидаемй кубик
+    if update.message.text == '🎲 Кинуть кубик':
+        dice(update, context)
+
+    # Кидаем один шестигранный кубик
+    if update.message.text == '🎲 Кинуть один шестигранный кубик':
+        update.message.reply_text(' '.join(throw_a_cube(6)))
+
+    # Кидаем 2 шестигранных кубика одновременно
+    if update.message.text == '🎲 🎲Кинуть 2 шестигранных кубика одновременно':
+        update.message.reply_text(' '.join(throw_a_cube(6, 2)))
+
+    # Кидаем 20-гранный кубик
+    if update.message.text == '🎱 Кинуть 20-гранный кубик':
+        update.message.reply_text(' '.join(throw_a_cube(20)))
+
     # Вход в админ панель
     if update.message.text == admin_pass:
         is_admin = True
@@ -341,8 +346,13 @@ def text_commands(update, context):
     if update.message.text == 'Перезапустить бота':
         markup = ReplyKeyboardMarkup(keyboard)
         if is_admin is True:
-            update.message.reply_text('Перезапускаю', reply_markup=markup)
-            start(update, context)
+            update.message.reply_text('Перезапускаю...')
+            update.message.reply_text(
+                'Введите ваш город и адрес, что'
+                'бы разблокировать весь функционал бота',
+                reply_markup=ReplyKeyboardRemove())
+            update.message.reply_text('Введите город')
+            return 1
         else:
             update.message.reply_text('Кажется вы не админ',
                                       reply_markup=markup)

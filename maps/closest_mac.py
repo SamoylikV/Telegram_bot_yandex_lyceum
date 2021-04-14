@@ -65,7 +65,7 @@ def closest_mac(city, address):
 
         os.chdir(f'{os.getcwd()}\img')
 
-        pharmacy_map_file = f"one_pharmacy_map{randint(0, 100000)}.png"
+        pharmacy_map_file = f"closest_mac_map{randint(0, 100000)}.png"
         with open(pharmacy_map_file, "wb") as file:
             file.write(response_map.content)
 
@@ -79,6 +79,3 @@ def closest_mac(city, address):
         return [pharmacy_map_file, name, distance, address_, time_of_work]
     except Exception:
         return [toponym_pharmacy_tochno]
-
-
-print(closest_mac('Тюмень', 'Свердлова 20'))
