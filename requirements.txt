@@ -1,0 +1,9 @@
+pytest==6.2.2
+python-telegram-bot==13.4.1
+requests==2.25.1
+requests-html==0.10.0
+requests-oauthlib==0.8.0
+rq==1.7.0
+telebot==0.0.4
+websockets==8.1
+
