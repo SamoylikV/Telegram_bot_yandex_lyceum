@@ -12,19 +12,17 @@ def pharmacy(city, address):
     toponym_pharmacy_tochno = 'Рядом с вами нету аптеки'
     new_points = []
     try:
-        full_adress = f'{city} {address}'
+        full_adress = f'{address} {city}'
         place = '%20'.join(' '.join(full_adress.split('-')).split(' '))
         points = []
         search_api_server = "https://search-maps.yandex.ru/v1/"
         api_key = "dda3ddba-c9ea-4ead-9010-f43fbc15c6e3"
-
-        geocoder_params = {
-            "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
-            "geocode": place,
-            "format": "json"}
-
-        response = requests.get(f'http://geocode-maps.yandex.ru/1.x/',
-                                params=geocoder_params)
+        print(place)
+        response = requests.get(f"http://geocode-m" \
+                                f"aps.yandex.ru/1.x/?apikey=4" \
+                                f"0d1649f-0493" \
+                                f"-4b70-98ba-98533de7710b&" \
+                                f"geocode={'%20'.join(city.split(' '))}%20{'%20'.join(address.split(' '))}&format=json")
 
         json_response = response.json()
         toponym = json_response["response"]["GeoObjectCollection"][
