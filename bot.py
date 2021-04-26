@@ -7,9 +7,21 @@ from maps.pharmacy import pharmacy
 from maps.closest_mac import closest_mac
 from games.guess_the_city import guess_the_city
 from games.dice import throw_a_cube, dice
+import argparse
 
-f = open("token.txt", encoding="utf8")
-updater = Updater(f.readlines()[0])
+parser = argparse.ArgumentParser()
+
+try:
+    parser.add_argument("token", nargs="*")
+    args = parser.parse_args()
+    updater = Updater(args.token[0])
+except Exception:
+    try:
+        f = open("token.txt", encoding="utf8")
+        updater = Updater(f.readlines()[0])
+    except Exception:
+        print('Введите правильный токен')
+
 try:
     p = open("pass.txt", encoding="utf8")
     admin_pass = p.readlines()[0]
@@ -366,5 +378,8 @@ def stop(update, context):
 
 if __name__ == '__main__':
     main()
-    updater.start_polling()
-    updater.idle()
+    try:
+        updater.start_polling()
+        updater.idle()
+    except Exception:
+        pass
