@@ -24,14 +24,15 @@ def vaccine_graph(country_):
 
     pivot = pivot.fillna(method='ffill')
     main_country = 'United States'
-    colors = {country: ('grey' if country != main_country else '#129583') for country in countries}
     alphas = {country: (0.75 if country != main_country else 1.0) for country in countries}
 
     fig, ax = plt.subplots(figsize=(12, 8))
     fig.patch.set_facecolor('#F5F5F5')
     ax.patch.set_facecolor('#F5F5F5')
+    colors = {country: ('grey' if country != main_country else '#129583') for country in countries}
 
     for country in countries:
+        print(country)
         ax.plot(
             pivot.index,
             pivot[country],
@@ -74,7 +75,7 @@ def death_graph(country_):
     orig_path = os.getcwd()
     df = pd.read_csv(
         'https://covid.ourworldindata.org/data/owid-covid-data.csv',
-        usecols=['date', 'location', 'new_deaths_smoothed_per_million'],
+        usecols=['date', 'location', 'total_deaths'],
         parse_dates=['date'])
     countries = [country_]
     df = df[df['location'].isin(countries)]
@@ -82,7 +83,7 @@ def death_graph(country_):
         data=df,
         index='date',
         columns='location',
-        values='new_deaths_smoothed_per_million',
+        values='total_deaths',
         aggfunc='mean',
     )
 
@@ -156,8 +157,8 @@ def new_cases_graph(country_):
     fig, ax = plt.subplots(figsize=(12, 8))
     fig.patch.set_facecolor('#F5F5F5')
     ax.patch.set_facecolor('#F5F5F5')
-
     for country in countries:
+        print(pivot[country])
         ax.plot(
             pivot.index,
             pivot[country],
@@ -175,7 +176,7 @@ def new_cases_graph(country_):
     ax.xaxis.set_major_locator(WeekdayLocator(byweekday=(0), interval=10))
     ax.xaxis.set_major_formatter(date_form)
     plt.xticks(rotation=45)
-    plt.ylim(0, 100)
+    plt.ylim(0, 100_000 + 100)
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
