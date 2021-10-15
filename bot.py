@@ -8,6 +8,7 @@ from maps.closest_mac import closest_mac
 from games.guess_the_city import guess_the_city
 from games.dice import throw_a_cube, dice
 from covid.covid_info import global_stats, all_countries
+from covid.infographics import death_graph, vaccine_graph, new_cases_graph
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -33,11 +34,11 @@ user_name = ''  # Переменная с именем пользователя
 user_city = ''  # Переменная с городом пользователя
 user_address = ''  # Переменная с адресом пользователя
 user_comment = ''  # Переменная с комментарием пользователя
+country = ''
 current_city = ''  # Переменная с текущим городом в игре "Угадай город"
 try_counter = 0  # Счёичмк попыток в игре "Угадай город"
 game_is_played = False  # Переменная с состаянием игры "Угадай город"
 is_admin = True  # Переменна яс состоянием меню админа
-next = False
 keyboard_main = [
     ['🌤 Узнать погоду', '🖊️ Написать отзыв', '🌆 Ввести новый адрес'],
     ['🚇 Найти ближайшее метро', '🍟 Найти ближайший макдональдс',
@@ -259,6 +260,15 @@ def text_commands(update, context):
             update.message.reply_text('Ваш отзыв пуст',
                                       reply_markup=markup)
 
+    if update.message.text == '/graph_vaccine':
+        update.message.reply_photo(update.message.reply_photo(photo=open(f'img/{vaccine_graph(country)}', 'rb')))
+
+    if update.message.text == '/graph_death':
+        update.message.reply_photo(update.message.reply_photo(photo=open(f'img/{death_graph(country)}', 'rb')))
+
+    if update.message.text == '/graph_new_cases':
+        update.message.reply_photo(update.message.reply_photo(photo=open(f'img/{new_cases_graph(country)}', 'rb')))
+
     # Обрабтока команды вывода погоды
     if update.message.text == '🌤 Узнать погоду':
         get_weather(update, context)
@@ -377,6 +387,7 @@ def text_commands(update, context):
 
 
 def get_covid_info(update, context):
+    global country
     country = update.message.text
     if country != '-':
         update.message.reply_text(f'Статистика по стране {country}')
@@ -388,7 +399,10 @@ def get_covid_info(update, context):
                                       f'🍀 Вылечено: {"{:,}".format(all_countries(country)[4])}\n'
                                       f'🍀 Вылечено за последние 24 часа: {"{:,}".format(all_countries(country)[5])}\n'
                                       f'🚨 В критическом состоянии: {"{:,}".format(all_countries(country)[6])}\n'
-                                      f'🚨 В критическом состоянии: {"{:,}".format(all_countries(country)[10])}')
+                                      '/graph_vaccine - Нажми что бы увидеть график вакцинирования\n'
+                                      '/graph_death - Нажми что бы увидеть график смертности\n'
+                                      '/graph_new_cases - Нажми что бы увидеть график новых заражений\n'
+                                      )
         except Exception:
             update.message.reply_text('Возможно вы ввели страну с ошибкой или на русском языке')
             update.message.reply_text('Введите вашу страну (на английском языке)')
