@@ -7,6 +7,7 @@ from maps.pharmacy import pharmacy
 from maps.closest_mac import closest_mac
 from games.guess_the_city import guess_the_city
 from games.dice import throw_a_cube, dice
+from covid.covid_info import global_stats, all_countries
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -14,11 +15,11 @@ parser = argparse.ArgumentParser()
 try:
     parser.add_argument("token", nargs="*")
     args = parser.parse_args()
-    updater = Updater(args.token[0])
+    updater_ = Updater(args.token[0])
 except Exception:
     try:
         f = open("token.txt", encoding="utf8")
-        updater = Updater(f.readlines()[0])
+        updater_ = Updater(f.readlines()[-1])
     except Exception:
         print('Введите правильный токен')
 
@@ -36,11 +37,12 @@ current_city = ''  # Переменная с текущим городом в и
 try_counter = 0  # Счёичмк попыток в игре "Угадай город"
 game_is_played = False  # Переменная с состаянием игры "Угадай город"
 is_admin = True  # Переменна яс состоянием меню админа
+next = False
 keyboard_main = [
     ['🌤 Узнать погоду', '🖊️ Написать отзыв', '🌆 Ввести новый адрес'],
     ['🚇 Найти ближайшее метро', '🍟 Найти ближайший макдональдс',
      '🏥 Показать аптеки недалеко от вас'],
-    ['🎮 Игры']]
+    ['🎮 Игры'], ['🦠 Covid-19']]
 keyboard_games = [['🌆 Угадай город', '🎲 Кинуть кубик'],
                   ['🕶 Основные функции']]
 keyboard_admin = [['Перезапустить бота']]
@@ -48,21 +50,21 @@ keyboard = keyboard_main
 
 
 def main():
-    global updater
-    dp = updater.dispatcher
+    global updater_
+    dp = updater_.dispatcher
     conv_handler = ConversationHandler(
         # Точка входа в диалог.
         # В данном случае — команда /start. Она задаёт первый вопрос.
         entry_points=[CommandHandler('start', start)],
 
         # Состояние внутри диалога.
-        # Вариант с двумя обработчиками, фильтрующими текстовые сообщения.
         states={
             1: [MessageHandler(Filters.text, get_city)],
             2: [MessageHandler(Filters.text, get_address)],
             3: [MessageHandler(Filters.text, second_start)],
             4: [MessageHandler(Filters.text, get_comments)],
-            5: [MessageHandler(Filters.text, text_commands)]
+            5: [MessageHandler(Filters.text, text_commands)],
+            6: [MessageHandler(Filters.text, get_covid_info)]
         },
 
         fallbacks=[CommandHandler('stop', stop)]
@@ -310,6 +312,10 @@ def text_commands(update, context):
         game_is_played = False
         current_city = ''
 
+    if update.message.text == '🦠 Covid-19':
+        update.message.reply_text('Введите вашу страну (на английском языке)')
+        update.message.reply_text('Что-бы вывести общию статистику напишите "-"')
+        return 6
     # Проверка правильности ответа в игре "Угадай город"
     if game_is_played is True:
         try_counter += 1
@@ -370,6 +376,33 @@ def text_commands(update, context):
                                       reply_markup=markup)
 
 
+def get_covid_info(update, context):
+    country = update.message.text
+    if country != '-':
+        update.message.reply_text(f'Статистика по стране {country}')
+        try:
+            update.message.reply_text(f'🦠 Всего случаев: {"{:,}".format(all_countries(country)[0])}\n'
+                                      f'🦠 Случаев за последние 24 часа: {"{:,}".format(all_countries(country)[1])}\n'
+                                      f'💀 Смертей: {"{:,}".format(all_countries(country)[2])}\n'
+                                      f'💀 Смертей за последние 24 часа: {"{:,}".format(all_countries(country)[3])}\n'
+                                      f'🍀 Вылечено: {"{:,}".format(all_countries(country)[4])}\n'
+                                      f'🍀 Вылечено за последние 24 часа: {"{:,}".format(all_countries(country)[5])}\n'
+                                      f'🚨 В критическом состоянии: {"{:,}".format(all_countries(country)[6])}\n'
+                                      f'🚨 В критическом состоянии: {"{:,}".format(all_countries(country)[10])}')
+        except Exception:
+            update.message.reply_text('Возможно вы ввели страну с ошибкой или на русском языке')
+            update.message.reply_text('Введите вашу страну (на английском языке)')
+            return 6
+    else:
+        update.message.reply_text(f'🦠 Всего случаев: {"{:,}".format(global_stats()[0])}\n'
+                                  f'🦠 Случаев за последние 24 часа: {"{:,}".format(global_stats()[1])}\n'
+                                  f'💀 Смертей: {"{:,}".format(global_stats()[2])}\n'
+                                  f'💀 Смертей за последние 24 часа: {"{:,}".format(global_stats()[3])}\n'
+                                  f'🍀 Вылечено: {"{:,}".format(global_stats()[4])}\n'
+                                  f'🍀 Вылечено за последние 24 часа: {"{:,}".format(global_stats()[5])}')
+    return 5
+
+
 def stop(update, context):
     update.message.reply_text(
         "До свидания")
@@ -379,7 +412,7 @@ def stop(update, context):
 if __name__ == '__main__':
     main()
     try:
-        updater.start_polling()
-        updater.idle()
+        updater_.start_polling()
+        updater_.idle()
     except Exception:
         pass
