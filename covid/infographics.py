@@ -23,7 +23,7 @@ def vaccine_graph(country_):
     )
 
     pivot = pivot.fillna(method='ffill')
-    main_country = 'United States'
+    main_country = 'Russia'
     alphas = {country: (0.75 if country != main_country else 1.0) for country in countries}
 
     fig, ax = plt.subplots(figsize=(12, 8))
@@ -88,7 +88,7 @@ def death_graph(country_):
     )
 
     pivot = pivot.fillna(method='ffill')
-    main_country = 'United States'
+    main_country = 'Russia'
     colors = {country: ('grey' if country != main_country else '#129583') for country in countries}
     alphas = {country: (0.75 if country != main_country else 1.0) for country in countries}
 
@@ -114,7 +114,7 @@ def death_graph(country_):
     ax.xaxis.set_major_locator(WeekdayLocator(byweekday=(0), interval=10))
     ax.xaxis.set_major_formatter(date_form)
     plt.xticks(rotation=45)
-    plt.ylim(0, 100)
+    plt.ylim(0, 100_000 + 1000)
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
@@ -124,7 +124,7 @@ def death_graph(country_):
     ax.grid(alpha=0.1)
 
     plt.xlabel('Date', fontsize=9, alpha=0.9)
-    plt.title('COVID-19 Кол-во смертей за 24 часа', fontsize=18, weight='bold', alpha=0.9)
+    plt.title('COVID-19 Кол-во смертей', fontsize=18, weight='bold', alpha=0.9)
 
     file_name = f'dead_24_{randint(0, 10000)}.png'
     os.chdir(f'{os.getcwd()}\img')
@@ -137,7 +137,7 @@ def new_cases_graph(country_):
     orig_path = os.getcwd()
     df = pd.read_csv(
         'https://covid.ourworldindata.org/data/owid-covid-data.csv',
-        usecols=['date', 'location', 'new_cases'],
+        usecols=['date', 'location', 'total_cases'],
         parse_dates=['date'])
     countries = [country_]
     df = df[df['location'].isin(countries)]
@@ -145,12 +145,12 @@ def new_cases_graph(country_):
         data=df,
         index='date',
         columns='location',
-        values='new_cases',
+        values='total_cases',
         aggfunc='mean',
     )
 
     pivot = pivot.fillna(method='ffill')
-    main_country = 'United States'
+    main_country = 'Russia'
     colors = {country: ('grey' if country != main_country else '#129583') for country in countries}
     alphas = {country: (0.75 if country != main_country else 1.0) for country in countries}
 
@@ -176,7 +176,7 @@ def new_cases_graph(country_):
     ax.xaxis.set_major_locator(WeekdayLocator(byweekday=(0), interval=10))
     ax.xaxis.set_major_formatter(date_form)
     plt.xticks(rotation=45)
-    plt.ylim(0, 100_000 + 100)
+    plt.ylim(0, 100_000 + 2500000)
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
@@ -186,7 +186,7 @@ def new_cases_graph(country_):
     ax.grid(alpha=0.1)
 
     plt.xlabel('Date', fontsize=9, alpha=0.9)
-    plt.title('COVID-19 Кол-во заражений за 24 часа', fontsize=18, weight='bold', alpha=0.9)
+    plt.title('COVID-19 Кол-во заражений', fontsize=18, weight='bold', alpha=0.9)
 
     file_name = f'infected_24_{randint(0, 10000)}.png'
     os.chdir(f'{os.getcwd()}\img')

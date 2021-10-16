@@ -77,7 +77,8 @@ keyboard_main = [['🦠 Covid-19'],
                  ['🎮 Игры']]
 keyboard_games = [['🌆 Угадай город', '🎲 Кинуть кубик'],
                   ['🕶 Основные функции']]
-covid_keyboard = [['🦠 В регионах', '🦠 В странах']]
+covid_keyboard = [['🦠 В регионах', '🦠 В странах'],
+                  ['🕶 Основные функции']]
 keyboard_admin = [['Перезапустить бота']]
 keyboard = keyboard_main
 
@@ -295,12 +296,15 @@ def text_commands(update, context):
 
     if update.message.text == '/graph_vaccine':
         update.message.reply_photo(update.message.reply_photo(photo=open(f'img/{vaccine_graph(country)}', 'rb')))
+        return 5
 
     if update.message.text == '/graph_death':
         update.message.reply_photo(update.message.reply_photo(photo=open(f'img/{death_graph(country)}', 'rb')))
+        return 5
 
     if update.message.text == '/graph_new_cases':
         update.message.reply_photo(update.message.reply_photo(photo=open(f'img/{new_cases_graph(country)}', 'rb')))
+        return 5
 
     # Обрабтока команды вывода погоды
     if update.message.text == '🌤 Узнать погоду':
@@ -430,7 +434,6 @@ def text_commands(update, context):
 
 def get_covid_info_coun(update, context):
     global country
-    print(123)
     country = update.message.text
     if country != '/tut':
         update.message.reply_text(f'Статистика по стране {country}')
@@ -444,7 +447,7 @@ def get_covid_info_coun(update, context):
                                       f'🚨 В критическом состоянии: {"{:,}".format(all_countries(country)[6])}\n'
                                       '/graph_vaccine - Нажми что бы увидеть график вакцинирования\n'
                                       '/graph_death - Нажми что бы увидеть график смертности\n'
-                                      '/graph_new_cases - Нажми что бы увидеть график новых заражений\n'
+                                      '/graph_new_cases - Нажми что бы увидеть график заражений\n'
                                       )
         except Exception as s:
             print(s)
