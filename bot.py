@@ -70,13 +70,14 @@ dumb_touple = {'Московская область': '1', 'Санкт-Пете�
                'Томская область': '11353', 'Амурская область': '11375', 'Камчатский край': '11398',
                'Магаданская область': '11403', 'Приморский край': '11409', 'Республика Саха (Якутия)': '11443',
                'Сахалинская область': '11450', 'Хабаровский край': '11457', 'Забайкальский край': '21949'}
-keyboard_main = [
-    ['🌤 Узнать погоду', '🖊️ Написать отзыв', '🌆 Ввести новый адрес'],
-    ['🚇 Найти ближайшее метро', '🍟 Найти ближайший макдональдс',
-     '🏥 Показать аптеки недалеко от вас'],
-    ['🎮 Игры'], ['🦠 Covid-19']]
+keyboard_main = [['🦠 Covid-19'],
+                 ['🌤 Узнать погоду', '🖊️ Написать отзыв', '🌆 Ввести новый адрес'],
+                 ['🚇 Найти ближайшее метро', '🍟 Найти ближайший макдональдс',
+                  '🏥 Показать аптеки недалеко от вас'],
+                 ['🎮 Игры']]
 keyboard_games = [['🌆 Угадай город', '🎲 Кинуть кубик'],
                   ['🕶 Основные функции']]
+covid_keyboard = [['🦠 В регионах', '🦠 В странах']]
 keyboard_admin = [['Перезапустить бота']]
 keyboard = keyboard_main
 
@@ -96,7 +97,8 @@ def main():
             3: [MessageHandler(Filters.text, second_start)],
             4: [MessageHandler(Filters.text, get_comments)],
             5: [MessageHandler(Filters.text, text_commands)],
-            6: [MessageHandler(Filters.text, get_covid_info)]
+            6: [MessageHandler(Filters.text, get_covid_info_reg)],
+            7: [MessageHandler(Filters.text, get_covid_info_coun)]
         },
 
         fallbacks=[CommandHandler('stop', stop)]
@@ -354,9 +356,18 @@ def text_commands(update, context):
         current_city = ''
 
     if update.message.text == '🦠 Covid-19':
-        update.message.reply_text('Введите вашу страну (на английском языке)')
-        update.message.reply_text('Что-бы вывести общию статистику напишите "-"')
+        markup = ReplyKeyboardMarkup(covid_keyboard)
+        update.message.reply_text('Теперь у вас включена клавиатура "Covid"', reply_markup=markup)
+
+    if update.message.text == '🦠 В регионах':
+        update.message.reply_text('Введите ваш регион')
         return 6
+
+    if update.message.text == '🦠 В странах':
+        update.message.reply_text('Введите вашу страну (на английском языке)')
+        update.message.reply_text('Что-бы вывести общию статистику нажмите /tut')
+        return 7
+
     # Проверка правильности ответа в игре "Угадай город"
     if game_is_played is True:
         try_counter += 1
@@ -417,10 +428,11 @@ def text_commands(update, context):
                                       reply_markup=markup)
 
 
-def get_covid_info(update, context):
+def get_covid_info_coun(update, context):
     global country
+    print(123)
     country = update.message.text
-    if country != '-':
+    if country != '/tut':
         update.message.reply_text(f'Статистика по стране {country}')
         try:
             update.message.reply_text(f'🦠 Всего случаев: {"{:,}".format(all_countries(country)[0])}\n'
@@ -434,29 +446,10 @@ def get_covid_info(update, context):
                                       '/graph_death - Нажми что бы увидеть график смертности\n'
                                       '/graph_new_cases - Нажми что бы увидеть график новых заражений\n'
                                       )
-        except Exception:
-            try:
-                response = \
-                requests.get('http://milab.s3.yandex.net/2020/covid19-stat/data/v10/default_data.json').json()[
-                    'russia_stat_struct']['data']
-                stats = []
-                print(12)
-                if country in dumb_touple:
-                    print(123)
-                    stats.append(response[dumb_touple[country]]['info']['cases'])
-                    stats.append(response[dumb_touple[country]]['info']['cases_delta'])
-                    stats.append(response[dumb_touple[country]]['info']['deaths'])
-                    stats.append(response[dumb_touple[country]]['info']['deaths_delta'])
-
-                    update.message.reply_text(f'🦠 Всего случаев: {"{:,}".format(stats[0])}\n'
-                                              f'🦠 Случаев за последние 24 часа: {"{:,}".format(stats[1])}\n'
-                                              f'💀 Смертей: {"{:,}".format(stats[2])}\n'
-                                              f'💀 Смертей за последние 24 часа: {"{:,}".format(stats[3])}\n'
-                                              )
-            except Exception:
-                update.message.reply_text('Возможно вы ввели страну с ошибкой или на русском языке')
-                update.message.reply_text('Введите вашу страну (на английском языке)')
-            return 6
+        except Exception as s:
+            print(s)
+            update.message.reply_text('Возможно вы ввели страну с ошибкой или на русском языке')
+            return 5
     else:
         update.message.reply_text(f'🦠 Всего случаев: {"{:,}".format(global_stats()[0])}\n'
                                   f'🦠 Случаев за последние 24 часа: {"{:,}".format(global_stats()[1])}\n'
@@ -464,6 +457,29 @@ def get_covid_info(update, context):
                                   f'💀 Смертей за последние 24 часа: {"{:,}".format(global_stats()[3])}\n'
                                   f'🍀 Вылечено: {"{:,}".format(global_stats()[4])}\n'
                                   f'🍀 Вылечено за последние 24 часа: {"{:,}".format(global_stats()[5])}')
+        country = ''
+    return 5
+
+
+def get_covid_info_reg(update, context):
+    global country
+    country = update.message.text
+    print(country)
+    response = \
+        requests.get('http://milab.s3.yandex.net/2020/covid19-stat/data/v10/default_data.json').json()[
+            'russia_stat_struct']['data']
+    stats = []
+    if country in dumb_touple:
+        stats.append(response[dumb_touple[country]]['info']['cases'])
+        stats.append(response[dumb_touple[country]]['info']['cases_delta'])
+        stats.append(response[dumb_touple[country]]['info']['deaths'])
+        stats.append(response[dumb_touple[country]]['info']['deaths_delta'])
+
+        update.message.reply_text(f'🦠 Всего случаев: {"{:,}".format(stats[0])}\n'
+                                  f'🦠 Случаев за последние 24 часа: {"{:,}".format(stats[1])}\n'
+                                  f'💀 Смертей: {"{:,}".format(stats[2])}\n'
+                                  f'💀 Смертей за последние 24 часа: {"{:,}".format(stats[3])}\n'
+                                  )
     return 5
 
 
